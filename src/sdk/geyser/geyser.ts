@@ -145,8 +145,7 @@ export const geyserClient = (
   const client = new GeyserClientStub(url, ChannelCredentials.createSsl(), {
     interceptors: [authInterceptor(accessToken)],
     // 11MiB, solana accounts can be up to 10MiB
-    'grpc.max_receive_message_length': 11534336,
-    'grpc.max_send_message_length': 11534336,
+    'grpc.max_receive_message_length': -1,
   });
 
   return new GeyserClient(client);
