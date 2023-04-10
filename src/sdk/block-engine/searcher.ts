@@ -325,7 +325,7 @@ export const searcherClient = (
     ChannelCredentials.createSsl(),
     {
       interceptors: [authInterceptor(authProvider)],
-      'grpc.keepalive_timeout_ms': 18000,
+      'grpc.keepalive_timeout_ms': 10000,
     }
   );
 

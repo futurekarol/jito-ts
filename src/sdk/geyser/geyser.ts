@@ -145,7 +145,7 @@ export const geyserClient = (
   const client = new GeyserClientStub(url, ChannelCredentials.createSsl(), {
     interceptors: [authInterceptor(accessToken)],
     'grpc.max_receive_message_length': -1,
-    'grpc.keepalive_timeout_ms': 18000,
+    'grpc.keepalive_timeout_ms': 10000,
   });
 
   return new GeyserClient(client);
