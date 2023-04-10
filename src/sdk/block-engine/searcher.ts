@@ -323,7 +323,10 @@ export const searcherClient = (
   const client = new SearcherServiceClient(
     url,
     ChannelCredentials.createSsl(),
-    {interceptors: [authInterceptor(authProvider)]}
+    {
+      interceptors: [authInterceptor(authProvider)],
+      'grpc.keepalive_timeout_ms': 18000,
+    }
   );
 
   return new SearcherClient(client);
