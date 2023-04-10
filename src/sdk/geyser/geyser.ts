@@ -142,14 +142,10 @@ export const geyserClient = (
   url: string,
   accessToken: string
 ): GeyserClient => {
-  const client = new GeyserClientStub(
-    url,
-    ChannelCredentials.createInsecure(),
-    {
-      interceptors: [authInterceptor(accessToken)],
-      'grpc.max_receive_message_length': -1,
-    }
-  );
+  const client = new GeyserClientStub(url, ChannelCredentials.createSsl(), {
+    interceptors: [authInterceptor(accessToken)],
+    'grpc.max_receive_message_length': -1,
+  });
 
   return new GeyserClient(client);
 };
