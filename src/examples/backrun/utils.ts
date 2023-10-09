@@ -25,6 +25,7 @@ export const onAccountUpdates = async (
   const tipAccount = new PublicKey(_tipAccount);
   c.onAccountUpdate(
     accounts,
+    [],
     async (transactions: VersionedTransaction[]) => {
       console.log(`received ${transactions.length} transactions`);
 

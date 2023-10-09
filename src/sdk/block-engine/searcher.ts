@@ -10,6 +10,7 @@ import {AuthServiceClient} from '../../gen/block-engine/auth';
 import {BundleResult} from '../../gen/block-engine/bundle';
 import {
   ConnectedLeadersResponse,
+  GetRegionsResponse,
   GetTipAccountsResponse,
   NextScheduledLeaderResponse,
   PendingTxNotification,
@@ -124,20 +125,52 @@ export class SearcherClient {
   }
 
   /**
+   * Fetches and returns the current region to which the client is directly connected, along with a list of all available regions.
+   *
+   * @returns {Promise<{ currentRegion: string, availableRegions: string[] }>}
+   * A Promise that resolves to an object containing:
+   *  - `currentRegion`: The region to which the client is currently connected.
+   *  - `availableRegions`: An array of available regions for the client to connect to.
+   *
+   * @throws {ServiceError}
+   * Throws a ServiceError if there's an issue with the block-engine server while fetching the regions.
+   */
+  async getRegions(): Promise<{
+    currentRegion: string;
+    availableRegions: string[];
+  }> {
+    return new Promise((resolve, reject) => {
+      this.client.getRegions(
+        {},
+        async (e: ServiceError | null, resp: GetRegionsResponse) => {
+          if (e) {
+            reject(e);
+          } else {
+            resolve(resp);
+          }
+        }
+      );
+    });
+  }
+
+  /**
    * Triggers the provided callback on account updates owned by the provided list of programs.
    *
    * @param programs - An array of program PublicKeys
+   * @param regions - Filters transactions to originate from specified regions. If empty defaults to the currently connected region.
    * @param successCallback - A callback function that receives the updated transactions (VersionedTransaction[])
    * @param errorCallback - A callback function that receives the stream error (Error)
    * @returns A function to cancel the subscription
    */
   onProgramUpdate(
     programs: PublicKey[],
+    regions: string[],
     successCallback: (transactions: VersionedTransaction[]) => void,
     errorCallback: (e: Error) => void
   ): () => void {
     const stream: ClientReadableStream<PendingTxNotification> =
       this.client.subscribeMempool({
+        regions,
         programV0Sub: {
           programs: programs.map(p => p.toString()),
         },
@@ -160,15 +193,18 @@ export class SearcherClient {
    * Yields on account updates owned by the provided list of programs.
    *
    * @param programs - An array of program PublicKeys
+   * @param regions - Filters transactions to originate from specified regions. If empty defaults to the currently connected region.
    * @param onError - A callback function that receives the stream error (Error)
    * @returns An async generator that yields transactions (VersionedTransaction[]) that use the provided programs
    */
   async *programUpdates(
     programs: PublicKey[],
+    regions: string[],
     onError: (e: Error) => void
   ): AsyncGenerator<VersionedTransaction[]> {
     const stream: ClientReadableStream<PendingTxNotification> =
       this.client.subscribeMempool({
+        regions,
         programV0Sub: {
           programs: programs.map(p => p.toString()),
         },
@@ -196,17 +232,20 @@ export class SearcherClient {
    * Triggers the provided callback on updates to the provided accounts.
    *
    * @param accounts - An array of account PublicKeys
+   * @param regions - Filters transactions to originate from specified regions. If empty defaults to the currently connected region.
    * @param successCallback - A callback function that receives the updated transactions (VersionedTransaction[])
    * @param errorCallback - A callback function that receives the stream error (Error)
    * @returns A function to cancel the subscription
    */
   onAccountUpdate(
     accounts: PublicKey[],
+    regions: string[],
     successCallback: (transactions: VersionedTransaction[]) => void,
     errorCallback: (e: Error) => void
   ): () => void {
     const stream: ClientReadableStream<PendingTxNotification> =
       this.client.subscribeMempool({
+        regions,
         wlaV0Sub: {
           accounts: accounts.map(a => a.toString()),
         },
@@ -229,15 +268,18 @@ export class SearcherClient {
    * Yields on updates to the provided accounts.
    *
    * @param accounts - An array of account PublicKeys
+   * @param regions - Filters transactions to originate from specified regions. If empty defaults to the currently connected region.
    * @param onError - A callback function that receives the stream error (Error)
    * @returns An async generator that yields updated transactions (VersionedTransaction[]) on account updates
    */
   async *accountUpdates(
     accounts: PublicKey[],
+    regions: string[],
     onError: (e: Error) => void
   ): AsyncGenerator<VersionedTransaction[]> {
     const stream: ClientReadableStream<PendingTxNotification> =
       this.client.subscribeMempool({
+        regions,
         wlaV0Sub: {
           accounts: accounts.map(a => a.toString()),
         },
