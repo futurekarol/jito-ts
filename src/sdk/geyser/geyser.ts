@@ -12,6 +12,7 @@ import {
   GeyserClient as GeyserClientStub,
   TimestampedAccountUpdate,
   TimestampedBlockUpdate,
+  TimestampedTransactionUpdate,
 } from '../../gen/geyser/geyser';
 
 export class GeyserClient {
@@ -118,6 +119,36 @@ export class GeyserClient {
   ): () => void {
     const stream: ClientReadableStream<TimestampedBlockUpdate> =
       this.client.subscribeBlockUpdates({});
+
+    stream.on('readable', () => {
+      const msg = stream.read(1);
+      if (msg) {
+        successCallback(msg);
+      }
+    });
+
+    stream.on('error', e =>
+      errorCallback(new Error(`Stream error: ${e.message}`))
+    );
+
+    return stream.cancel;
+  }
+
+  /**
+   * Subscribes to transaction updates, triggering callbacks for each update or error.
+   *
+   * @param successCallback - Callback invoked whenever a transaction update is received.
+   *                          The callback receives a TimestampedTransactionUpdate object.
+   * @param errorCallback   - Callback invoked when an error occurs during subscription.
+   *                          The callback receives an Error object.
+   * @returns A function that, when called, cancels the subscription.
+   */
+  onTransactionUpdate(
+    successCallback: (resp: TimestampedTransactionUpdate) => void,
+    errorCallback: (e: Error) => void
+  ) {
+    const stream: ClientReadableStream<TimestampedTransactionUpdate> =
+      this.client.subscribeTransactionUpdates({});
 
     stream.on('readable', () => {
       const msg = stream.read(1);
