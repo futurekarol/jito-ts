@@ -35,16 +35,28 @@ export interface SendBundleResponse {
 }
 
 export interface ProgramSubscriptionV0 {
+  /** Base58 encoded program id that transactions mention */
   programs: string[];
 }
 
 export interface WriteLockedAccountSubscriptionV0 {
+  /** Base58 encoded account pubkey that transactions mention */
   accounts: string[];
 }
 
 export interface MempoolSubscription {
-  programV0Sub?: ProgramSubscriptionV0 | undefined;
-  wlaV0Sub?: WriteLockedAccountSubscriptionV0 | undefined;
+  programV0Sub?:
+    | ProgramSubscriptionV0
+    | undefined;
+  /** / field numbers upto (and incl) 9 are reserved */
+  wlaV0Sub?:
+    | WriteLockedAccountSubscriptionV0
+    | undefined;
+  /**
+   * Filters transactions to originate from specified regions.
+   * Defaults to the currently connected region.
+   */
+  regions: string[];
 }
 
 export interface PendingTxSubscriptionRequest {
@@ -99,6 +111,19 @@ export interface GetTipAccountsResponse {
 }
 
 export interface SubscribeBundleResultsRequest {
+}
+
+export interface GetRegionsRequest {
+}
+
+export interface GetRegionsResponse {
+  /** The region the client is currently connected to */
+  currentRegion: string;
+  /**
+   * Regions that are online and ready for connections
+   * All regions: https://jito-labs.gitbook.io/mev/systems/connecting/mainnet
+   */
+  availableRegions: string[];
 }
 
 function createBaseSlotList(): SlotList {
@@ -384,7 +409,7 @@ export const WriteLockedAccountSubscriptionV0 = {
 };
 
 function createBaseMempoolSubscription(): MempoolSubscription {
-  return { programV0Sub: undefined, wlaV0Sub: undefined };
+  return { programV0Sub: undefined, wlaV0Sub: undefined, regions: [] };
 }
 
 export const MempoolSubscription = {
@@ -394,6 +419,9 @@ export const MempoolSubscription = {
     }
     if (message.wlaV0Sub !== undefined) {
       WriteLockedAccountSubscriptionV0.encode(message.wlaV0Sub, writer.uint32(18).fork()).ldelim();
+    }
+    for (const v of message.regions) {
+      writer.uint32(82).string(v!);
     }
     return writer;
   },
@@ -411,6 +439,9 @@ export const MempoolSubscription = {
         case 2:
           message.wlaV0Sub = WriteLockedAccountSubscriptionV0.decode(reader, reader.uint32());
           break;
+        case 10:
+          message.regions.push(reader.string());
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -423,6 +454,7 @@ export const MempoolSubscription = {
     return {
       programV0Sub: isSet(object.programV0Sub) ? ProgramSubscriptionV0.fromJSON(object.programV0Sub) : undefined,
       wlaV0Sub: isSet(object.wlaV0Sub) ? WriteLockedAccountSubscriptionV0.fromJSON(object.wlaV0Sub) : undefined,
+      regions: Array.isArray(object?.regions) ? object.regions.map((e: any) => String(e)) : [],
     };
   },
 
@@ -432,6 +464,11 @@ export const MempoolSubscription = {
       (obj.programV0Sub = message.programV0Sub ? ProgramSubscriptionV0.toJSON(message.programV0Sub) : undefined);
     message.wlaV0Sub !== undefined &&
       (obj.wlaV0Sub = message.wlaV0Sub ? WriteLockedAccountSubscriptionV0.toJSON(message.wlaV0Sub) : undefined);
+    if (message.regions) {
+      obj.regions = message.regions.map((e) => e);
+    } else {
+      obj.regions = [];
+    }
     return obj;
   },
 
@@ -447,6 +484,7 @@ export const MempoolSubscription = {
     message.wlaV0Sub = (object.wlaV0Sub !== undefined && object.wlaV0Sub !== null)
       ? WriteLockedAccountSubscriptionV0.fromPartial(object.wlaV0Sub)
       : undefined;
+    message.regions = object.regions?.map((e) => e) || [];
     return message;
   },
 };
@@ -1025,6 +1063,117 @@ export const SubscribeBundleResultsRequest = {
   },
 };
 
+function createBaseGetRegionsRequest(): GetRegionsRequest {
+  return {};
+}
+
+export const GetRegionsRequest = {
+  encode(_: GetRegionsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GetRegionsRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetRegionsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): GetRegionsRequest {
+    return {};
+  },
+
+  toJSON(_: GetRegionsRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetRegionsRequest>, I>>(base?: I): GetRegionsRequest {
+    return GetRegionsRequest.fromPartial(base ?? {});
+  },
+
+  fromPartial<I extends Exact<DeepPartial<GetRegionsRequest>, I>>(_: I): GetRegionsRequest {
+    const message = createBaseGetRegionsRequest();
+    return message;
+  },
+};
+
+function createBaseGetRegionsResponse(): GetRegionsResponse {
+  return { currentRegion: "", availableRegions: [] };
+}
+
+export const GetRegionsResponse = {
+  encode(message: GetRegionsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.currentRegion !== "") {
+      writer.uint32(10).string(message.currentRegion);
+    }
+    for (const v of message.availableRegions) {
+      writer.uint32(18).string(v!);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): GetRegionsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetRegionsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.currentRegion = reader.string();
+          break;
+        case 2:
+          message.availableRegions.push(reader.string());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetRegionsResponse {
+    return {
+      currentRegion: isSet(object.currentRegion) ? String(object.currentRegion) : "",
+      availableRegions: Array.isArray(object?.availableRegions)
+        ? object.availableRegions.map((e: any) => String(e))
+        : [],
+    };
+  },
+
+  toJSON(message: GetRegionsResponse): unknown {
+    const obj: any = {};
+    message.currentRegion !== undefined && (obj.currentRegion = message.currentRegion);
+    if (message.availableRegions) {
+      obj.availableRegions = message.availableRegions.map((e) => e);
+    } else {
+      obj.availableRegions = [];
+    }
+    return obj;
+  },
+
+  create<I extends Exact<DeepPartial<GetRegionsResponse>, I>>(base?: I): GetRegionsResponse {
+    return GetRegionsResponse.fromPartial(base ?? {});
+  },
+
+  fromPartial<I extends Exact<DeepPartial<GetRegionsResponse>, I>>(object: I): GetRegionsResponse {
+    const message = createBaseGetRegionsResponse();
+    message.currentRegion = object.currentRegion ?? "";
+    message.availableRegions = object.availableRegions?.map((e) => e) || [];
+    return message;
+  },
+};
+
 export type SearcherServiceService = typeof SearcherServiceService;
 export const SearcherServiceService = {
   /**
@@ -1108,6 +1257,16 @@ export const SearcherServiceService = {
     responseSerialize: (value: GetTipAccountsResponse) => Buffer.from(GetTipAccountsResponse.encode(value).finish()),
     responseDeserialize: (value: Buffer) => GetTipAccountsResponse.decode(value),
   },
+  /** Returns region the client is directly connected to, along with all available regions */
+  getRegions: {
+    path: "/searcher.SearcherService/GetRegions",
+    requestStream: false,
+    responseStream: false,
+    requestSerialize: (value: GetRegionsRequest) => Buffer.from(GetRegionsRequest.encode(value).finish()),
+    requestDeserialize: (value: Buffer) => GetRegionsRequest.decode(value),
+    responseSerialize: (value: GetRegionsResponse) => Buffer.from(GetRegionsResponse.encode(value).finish()),
+    responseDeserialize: (value: Buffer) => GetRegionsResponse.decode(value),
+  },
 } as const;
 
 export interface SearcherServiceServer extends UntypedServiceImplementation {
@@ -1131,6 +1290,8 @@ export interface SearcherServiceServer extends UntypedServiceImplementation {
   getConnectedLeaders: handleUnaryCall<ConnectedLeadersRequest, ConnectedLeadersResponse>;
   /** Returns the tip accounts searchers shall transfer funds to for the leader to claim. */
   getTipAccounts: handleUnaryCall<GetTipAccountsRequest, GetTipAccountsResponse>;
+  /** Returns region the client is directly connected to, along with all available regions */
+  getRegions: handleUnaryCall<GetRegionsRequest, GetRegionsResponse>;
 }
 
 export interface SearcherServiceClient extends Client {
@@ -1233,6 +1394,22 @@ export interface SearcherServiceClient extends Client {
     metadata: Metadata,
     options: Partial<CallOptions>,
     callback: (error: ServiceError | null, response: GetTipAccountsResponse) => void,
+  ): ClientUnaryCall;
+  /** Returns region the client is directly connected to, along with all available regions */
+  getRegions(
+    request: GetRegionsRequest,
+    callback: (error: ServiceError | null, response: GetRegionsResponse) => void,
+  ): ClientUnaryCall;
+  getRegions(
+    request: GetRegionsRequest,
+    metadata: Metadata,
+    callback: (error: ServiceError | null, response: GetRegionsResponse) => void,
+  ): ClientUnaryCall;
+  getRegions(
+    request: GetRegionsRequest,
+    metadata: Metadata,
+    options: Partial<CallOptions>,
+    callback: (error: ServiceError | null, response: GetRegionsResponse) => void,
   ): ClientUnaryCall;
 }
 
