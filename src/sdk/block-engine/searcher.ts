@@ -38,18 +38,22 @@ export class SearcherClient {
    */
   async sendBundle(bundle: Bundle): Promise<string> {
     return new Promise((resolve, reject) => {
-      this.client.sendBundle(
-        {
-          bundle,
-        } as SendBundleRequest,
-        async (e: ServiceError | null, resp: SendBundleResponse) => {
-          if (e) {
-            reject(e);
-          } else {
-            resolve(resp.uuid);
+      try {
+        this.client.sendBundle(
+          {
+            bundle,
+          } as SendBundleRequest,
+          async (e: ServiceError | null, resp: SendBundleResponse) => {
+            if (e) {
+              reject(e);
+            } else {
+              resolve(resp.uuid);
+            }
           }
-        }
-      );
+        );
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
@@ -61,16 +65,20 @@ export class SearcherClient {
    */
   async getTipAccounts(): Promise<string[]> {
     return new Promise((resolve, reject) => {
-      this.client.getTipAccounts(
-        {},
-        async (e: ServiceError | null, resp: GetTipAccountsResponse) => {
-          if (e) {
-            reject(e);
-          } else {
-            resolve(resp.accounts);
+      try {
+        this.client.getTipAccounts(
+          {},
+          async (e: ServiceError | null, resp: GetTipAccountsResponse) => {
+            if (e) {
+              reject(e);
+            } else {
+              resolve(resp.accounts);
+            }
           }
-        }
-      );
+        );
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
@@ -82,16 +90,20 @@ export class SearcherClient {
    */
   async getConnectedLeaders(): Promise<{[key: string]: SlotList}> {
     return new Promise((resolve, reject) => {
-      this.client.getConnectedLeaders(
-        {},
-        async (e: ServiceError | null, resp: ConnectedLeadersResponse) => {
-          if (e) {
-            reject(e);
-          } else {
-            resolve(resp.connectedValidators);
+      try {
+        this.client.getConnectedLeaders(
+          {},
+          async (e: ServiceError | null, resp: ConnectedLeadersResponse) => {
+            if (e) {
+              reject(e);
+            } else {
+              resolve(resp.connectedValidators);
+            }
           }
-        }
-      );
+        );
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
@@ -110,16 +122,20 @@ export class SearcherClient {
     nextLeaderIdentity: string;
   }> {
     return new Promise((resolve, reject) => {
-      this.client.getNextScheduledLeader(
-        {},
-        async (e: ServiceError | null, resp: NextScheduledLeaderResponse) => {
-          if (e) {
-            reject(e);
-          } else {
-            resolve(resp);
+      try {
+        this.client.getNextScheduledLeader(
+          {},
+          async (e: ServiceError | null, resp: NextScheduledLeaderResponse) => {
+            if (e) {
+              reject(e);
+            } else {
+              resolve(resp);
+            }
           }
-        }
-      );
+        );
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
