@@ -29,15 +29,11 @@ export const authInterceptor = (authProvider: AuthProvider): Interceptor => {
   return (opts: InterceptorOptions, nextCall: NextCall) => {
     return new InterceptingCall(nextCall(opts), {
       start: async function (metadata: Metadata, listener: Listener, next) {
-        const injectAccessToken = new Promise<void>(resolve => {
-          authProvider.injectAccessToken((accessToken: Jwt) => {
-            metadata.set('authorization', `Bearer ${accessToken.token}`);
-            resolve();
-          });
-        });
-        injectAccessToken
-          .catch(e => console.log(e))
-          .then(() => next(metadata, listener));
+        const callback = (accessToken: Jwt) => {
+          metadata.set('authorization', `Bearer ${accessToken.token}`);
+          next(metadata, listener);
+        };
+        authProvider.injectAccessToken(callback);
       },
     });
   };
