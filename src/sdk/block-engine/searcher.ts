@@ -37,6 +37,7 @@ export class SearcherClient {
    * @throws A ServiceError if there's an issue with the server while sending the bundle.
    */
   async sendBundle(bundle: Bundle): Promise<string> {
+    console.log("aaaaah i'm debugging");
     return new Promise((resolve, reject) => {
       try {
         this.client.sendBundle(
