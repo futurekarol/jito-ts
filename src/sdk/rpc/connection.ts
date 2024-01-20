@@ -5,10 +5,8 @@
 import {
   Commitment,
   Connection,
-  ConnectionConfig,
-  FetchFn,
-  FetchMiddleware,
   HttpHeaders,
+  ConnectionConfig as ConnectionConfigOriginal,
   RpcResponseAndContext,
   SendTransactionError,
   SimulatedTransactionAccountInfo,
@@ -35,7 +33,7 @@ import {
 } from 'superstruct';
 import type {Agent as NodeHttpAgent} from 'http';
 import {Agent as NodeHttpsAgent} from 'https';
-import fetchImpl, {Response} from './fetch-impl';
+import fetchImpl from './fetch-impl';
 import HttpKeepAliveAgent, {
   HttpsAgent as HttpsKeepAliveAgent,
 } from 'agentkeepalive';
@@ -45,6 +43,36 @@ import {sleep} from './utils';
 
 export type Slot = number;
 export type Tip = 'tip';
+
+type FetchFn = typeof fetchImpl;
+export type FetchMiddleware = (
+  info: Parameters<FetchFn>[0],
+  init: Parameters<FetchFn>[1],
+  fetch: (...a: Parameters<FetchFn>) => void
+) => void;
+
+export type ConnectionConfig = {
+  /**
+   * An `http.Agent` that will be used to manage socket connections (eg. to implement connection
+   * persistence). Set this to `false` to create a connection that uses no agent. This applies to
+   * Node environments only.
+   */
+  httpAgent?: NodeHttpAgent | NodeHttpsAgent | false;
+  /** Optional commitment level */
+  commitment?: Commitment;
+  /** Optional endpoint URL to the fullnode JSON RPC PubSub WebSocket Endpoint */
+  wsEndpoint?: string;
+  /** Optional HTTP headers object */
+  httpHeaders?: HttpHeaders;
+  /** Optional custom fetch function */
+  fetch?: FetchFn;
+  /** Optional fetch middleware callback */
+  fetchMiddleware?: FetchMiddleware;
+  /** Optional Disable retrying calls when server responds with HTTP 429 (Too Many Requests) */
+  disableRetryOnRateLimit?: boolean;
+  /** time to allow for the server to initially process a transaction (in milliseconds) */
+  confirmTransactionInitialTimeout?: number;
+};
 
 /**
  * Simulate on top of bank with the provided commitment or on the provided slot's bank or on top of the RPC's highest slot's bank i.e. the working bank.
@@ -372,7 +400,7 @@ export class JitoRpcConnection extends Connection {
     endpoint: string,
     commitmentOrConfig?: Commitment | ConnectionConfig
   ) {
-    super(endpoint, commitmentOrConfig);
+    super(endpoint, commitmentOrConfig as ConnectionConfigOriginal);
 
     let httpHeaders;
     let fetch;
